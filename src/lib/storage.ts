@@ -8,6 +8,7 @@ type StoredSettings = Omit<SettingsStore["settings"], "model"> & {
   model: {
     [key in Provider]: string;
   };
+  useAgentMode: boolean;
 };
 
 export const StorageKey = {
@@ -29,6 +30,7 @@ const storage = {
         imageQuality: 0.5,
         provider: "openai",
         useTTS: false,
+        useAgentMode: false,
         model: {
           openai: "gpt-4o-mini",
           anthropic: "claude-sonnet-4-5",

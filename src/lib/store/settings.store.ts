@@ -7,6 +7,7 @@ export interface SettingsStore {
     imageQuality: number;
     provider: Provider;
     useTTS: boolean;
+    useAgentMode: boolean;
     model: {
       [key in Provider]: string;
     };
@@ -45,6 +46,7 @@ async function loadAndInitializeSettings() {
     model: storedSettings.model,
     isMaiUIVisible: storedSettings.isMaiUIVisible,
     isConversationSidebarVisible: storedSettings.isConversationSidebarVisible,
+    useAgentMode: storedSettings.useAgentMode ?? false,
   });
 }
 

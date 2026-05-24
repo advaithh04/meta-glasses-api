@@ -1,5 +1,5 @@
 import { defineBackground } from "#imports";
-import { aiTtsRequest, aiVisionRequest, generateAiText } from "@/lib/ai";
+import { aiTtsRequest, aiVisionRequest, generateAiText, generateAiTextWithTools } from "@/lib/ai";
 import { getStorage, StorageKey } from "@/lib/storage";
 import { logError, logMessage } from "@/lib/utils";
 import { Log, Message, onMessage } from "~/lib/messaging";
@@ -38,6 +38,18 @@ onMessage(Message.AI_CHAT, async (message) => {
     return response;
   } catch (error: unknown) {
     logError("[background] AI Chat Error: " + error);
+    throw error;
+  }
+});
+
+onMessage(Message.AI_CHAT_AGENT, async (message) => {
+  try {
+    logMessage("[background] AI Agent Chat Request Received");
+    const response = await generateAiTextWithTools(message.data);
+    logMessage("[background] AI Agent Chat Response: " + response);
+    return response;
+  } catch (error: unknown) {
+    logError("[background] AI Agent Chat Error: " + error);
     throw error;
   }
 });

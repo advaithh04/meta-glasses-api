@@ -9,6 +9,7 @@ import { createOpenAI, OpenAIProvider } from "@ai-sdk/openai";
 import { createPerplexity, PerplexityProvider } from "@ai-sdk/perplexity";
 import { createXai, XaiProvider } from "@ai-sdk/xai";
 import { generateText } from "ai";
+import { runAgentWithTools } from "./agents";
 import { providerToTTSModels } from "./constants";
 import { getStorage, StorageKey } from "./storage";
 import { logError, logMessage } from "./utils";
@@ -84,6 +85,24 @@ export async function generateAiText(message: string) {
   } catch (error) {
     logError("Error generating AI text: " + error);
     throw error;
+  }
+}
+
+export async function generateAiTextWithTools(message: string): Promise<string> {
+  logMessage("generateAiTextWithTools");
+  const settings = getStorage(StorageKey.SETTINGS);
+  const settingsValue = await settings.getValue();
+  const provider = settingsValue.provider;
+  const model = settingsValue.model[provider];
+  try {
+    const aiProvider = await createAiProvider(provider);
+    const result = await runAgentWithTools(message, aiProvider, model);
+    logMessage("generateAiTextWithTools Response: " + result.finalResponse);
+    return result.finalResponse;
+  } catch (error) {
+    logError("Error in generateAiTextWithTools: " + error);
+    logMessage("Falling back to generateAiText");
+    return generateAiText(message);
   }
 }
 

@@ -39,6 +39,7 @@ export class Log {
 
 export const Message = {
   AI_CHAT: "ai-chat",
+  AI_CHAT_AGENT: "ai-chat-agent",
   AI_TTS: "ai-tts",
   AI_VISION: "ai-vision",
   ADD_LOG: "add-log",
@@ -50,6 +51,7 @@ export type Message = (typeof Message)[keyof typeof Message];
 
 interface Messages {
   [Message.AI_CHAT]: (message: string) => Promise<string>;
+  [Message.AI_CHAT_AGENT]: (message: string) => Promise<string>;
   [Message.AI_TTS]: (message: string) => Promise<string>;
   [Message.AI_VISION]: (message: {
     base64?: string;

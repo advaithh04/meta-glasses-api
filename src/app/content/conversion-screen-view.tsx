@@ -113,7 +113,10 @@ export function ConversionScreenView() {
   async function handleNewTextMessage(receivedMessage: string) {
     logMessage("User sent: " + receivedMessage);
     try {
-      const aiResponse = await sendMessage(Message.AI_CHAT, receivedMessage);
+      const messageType = settings.useAgentMode
+        ? Message.AI_CHAT_AGENT
+        : Message.AI_CHAT;
+      const aiResponse = await sendMessage(messageType, receivedMessage);
       sendMessageToUser(aiResponse);
       if (settings.useTTS) {
         handleTts(aiResponse);
@@ -251,6 +254,24 @@ export function ConversionScreenView() {
       })
     );
   }
+
+  const agentModeToggle = (
+    <div className="flex flex-row gap-2 items-center justify-between">
+      <p className="text-xs font-bold text-white font-sans">Agent Mode</p>
+      <input
+        className="cursor-pointer"
+        type="checkbox"
+        title="Enable voice-to-action agents (web search, notes, calendar)"
+        checked={settings.useAgentMode ?? false}
+        onChange={(e) => {
+          setSettings({
+            ...settings,
+            useAgentMode: e.target.checked,
+          });
+        }}
+      />
+    </div>
+  );
 
   const ttsSettings = (
     <div className="w-auto flex flex-col gap-2 items-start">
@@ -525,6 +546,9 @@ export function ConversionScreenView() {
           <ChatProviderSettings darkMode={true} />
           <ChatModelSettings darkMode={true} />
           {ttsSettings}
+          <div className="flex flex-col justify-center gap-2 ml-2">
+            {agentModeToggle}
+          </div>
         </div>
       </div>
     </div>
