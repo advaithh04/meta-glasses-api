@@ -30,11 +30,34 @@ onMessage(Message.ADD_LOG, async (message) => {
   }
 });
 
+async function logConversationToBackend(
+  userMessage: string,
+  aiResponse: string,
+  agentMode: boolean
+) {
+  try {
+    const settings = getStorage(StorageKey.SETTINGS);
+    const settingsValue = await settings.getValue();
+    await fetch("http://localhost:3001/api/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        provider: settingsValue.provider,
+        model: settingsValue.model[settingsValue.provider],
+        userMessage,
+        aiResponse,
+        agentMode,
+      }),
+    });
+  } catch (_) {}
+}
+
 onMessage(Message.AI_CHAT, async (message) => {
   try {
     logMessage("[background] AI Chat Request Received");
     const response = await generateAiText(message.data);
     logMessage("[background] AI Chat Response Generated: " + response);
+    void logConversationToBackend(message.data, response ?? "", false);
     return response;
   } catch (error: unknown) {
     logError("[background] AI Chat Error: " + error);
@@ -47,6 +70,7 @@ onMessage(Message.AI_CHAT_AGENT, async (message) => {
     logMessage("[background] AI Agent Chat Request Received");
     const response = await generateAiTextWithTools(message.data);
     logMessage("[background] AI Agent Chat Response: " + response);
+    void logConversationToBackend(message.data, response ?? "", true);
     return response;
   } catch (error: unknown) {
     logError("[background] AI Agent Chat Error: " + error);

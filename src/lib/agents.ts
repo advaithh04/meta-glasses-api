@@ -146,6 +146,14 @@ async function saveToolLog(tool: string, input: string, output: string) {
     if (logs.length > 500) logs.splice(0, logs.length - 500);
     localStorage.setItem(key, JSON.stringify(logs));
   } catch (_) {}
+
+  try {
+    await fetch("http://localhost:3001/api/tool-logs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ toolName: tool, input, output }),
+    });
+  } catch (_) {}
 }
 
 export async function runAgentWithTools(
