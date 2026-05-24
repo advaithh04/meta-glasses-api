@@ -100,7 +100,11 @@ export const providerToModels = {
     { title: "Sonar", value: "sonar" },
   ],
   anthropic: [
-    { title: "Claude 3.5 Sonnet", value: "claude-3-5-sonnet-20240620" },
+    { title: "Claude Sonnet 4.5", value: "claude-sonnet-4-5" },
+    { title: "Claude Opus 4", value: "claude-opus-4-0" },
+    { title: "Claude Haiku 4.5", value: "claude-haiku-4-5" },
+    { title: "Claude 3.5 Sonnet", value: "claude-3-5-sonnet-20241022" },
+    { title: "Claude 3.5 Haiku", value: "claude-3-5-haiku-20241022" },
   ],
   google: [
     { title: "Gemini 2.5 Flash", value: "gemini-2.5-flash" },

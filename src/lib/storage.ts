@@ -31,7 +31,7 @@ const storage = {
         useTTS: false,
         model: {
           openai: "gpt-4o-mini",
-          anthropic: "claude-3-5-sonnet-20240620",
+          anthropic: "claude-sonnet-4-5",
           perplexity: "sonar-pro",
           google: "gemini-2.0-flash",
           deepseek: "deepseek-chat",

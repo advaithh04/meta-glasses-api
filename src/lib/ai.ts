@@ -60,6 +60,12 @@ async function createAiProvider(
   }
 }
 
+const GLASSES_SYSTEM_PROMPT = `You are an AI assistant integrated into Meta smart glasses.
+You receive messages via voice transcription from the user wearing the glasses.
+Keep responses concise and conversational — they will be read aloud via text-to-speech.
+Avoid markdown, bullet points, or formatting that does not translate well to speech.
+Answer directly and helpfully in 1-3 sentences unless asked for more detail.`;
+
 export async function generateAiText(message: string) {
   logMessage("generateAiText");
   const settings = getStorage(StorageKey.SETTINGS);
@@ -70,6 +76,7 @@ export async function generateAiText(message: string) {
     const aiProvider = await createAiProvider(provider);
     const { text } = await generateText({
       model: aiProvider(model),
+      system: GLASSES_SYSTEM_PROMPT,
       prompt: message,
     });
     logMessage("generateAiText Response Generated: " + text);

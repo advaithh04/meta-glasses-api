@@ -1,19 +1,28 @@
-# Mai - Meta Glasses API for Messenger
+# Mai - Meta Glasses AI Assistant
 
 ![](/assets/mai-promotional.png)
 
 Note: by using this project you agree to the terms of use outlined in [TERMS_OF_USE.md](https://github.com/dcrebbin/meta-glasses-api/blob/main/TERMS_OF_USE.md)
 
-**This is a browser extension to add custom AI bots to messenger that can be used with the Meta Rayban Smart Glasses or the standalone messenger app.**
+**A browser extension that adds advanced AI capabilities to Meta Ray-Ban Smart Glasses via Messenger — featuring Claude, voice-to-action agents, a backend analytics API, and more.**
 
-## Features:
+## Features
 
-1. Hey Meta send a photo to my food log: [Video Demo](https://www.youtube.com/watch?v=PiEDrcLCmew)
+1. **Multi-provider AI Chat** — Supports OpenAI, Anthropic Claude (Sonnet 4.5, Opus 4, Haiku 4.5), Perplexity, Google Gemini, DeepSeek, and xAI Grok
+2. **Voice-to-Action Agents** — Say a command and trigger real actions: web search, note-taking, calendar event creation
+3. **Backend Analytics API** — Node.js/Express server with SQLite stores conversation history and tool usage analytics
+4. **Video Monitoring** — Send screenshots of video calls to your chosen AI provider for real-time analysis
 
-2. Hey Meta send a message to ChatGPT
+### Hey Meta send a photo to my food log: [Video Demo](https://www.youtube.com/watch?v=PiEDrcLCmew)
 
-3. Video Monitoring: Send screenshots of your video calls to your chosen provider (ChatGPT, Claude etc) and then log the output to the log viewer
-   ![](/assets/video-monitoring.png)
+![](/assets/video-monitoring.png)
+
+## What's New (Enhancements over original)
+
+- **Claude support** with latest models: claude-sonnet-4-5, claude-opus-4-0, claude-haiku-4-5, claude-3-5-sonnet, claude-3-5-haiku
+- **Glasses-optimised system prompt** — responses are concise and TTS-friendly by default
+- **Voice-to-action agentic tools** — `searchWeb`, `takeNote`, `createCalendarEvent`
+- **Backend API** at `localhost:3001` for conversation history, tool logs, and analytics
 
 ### Requirements:
 
