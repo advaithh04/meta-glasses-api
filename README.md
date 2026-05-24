@@ -1,111 +1,135 @@
-# Mai - Meta Glasses AI Assistant
+# Mai — Ambient AI for Meta Ray-Ban Smart Glasses
 
 ![](/assets/mai-promotional.png)
 
-Note: by using this project you agree to the terms of use outlined in [TERMS_OF_USE.md](https://github.com/dcrebbin/meta-glasses-api/blob/main/TERMS_OF_USE.md)
+> By using this project you agree to the [Terms of Use](TERMS_OF_USE.md).
 
-**A browser extension that adds advanced AI capabilities to Meta Ray-Ban Smart Glasses via Messenger — featuring Claude, voice-to-action agents, a backend analytics API, and more.**
+Mai turns Meta Ray-Ban Smart Glasses into a context-aware AI assistant. Rather than treating the glasses as a simple voice interface, this project explores what it means to have ambient intelligence that can perceive your environment, reason about it, and take real actions on your behalf — all through a natural conversational layer built on top of Messenger.
+
+---
+
+## Architecture Overview
+
+```
+Meta Glasses (voice/camera)
+        │
+        ▼
+  Facebook Messenger
+        │
+        ▼
+  Browser Extension (WXT + React)
+  ├── Multi-provider LLM routing (OpenAI, Claude, Gemini, Perplexity, DeepSeek, xAI)
+  ├── Agentic tool loop (Vercel AI SDK maxSteps)
+  │   ├── searchWeb  → Perplexity Sonar
+  │   ├── takeNote   → persistent local storage
+  │   └── createCalendarEvent → Google Calendar
+  └── Vision pipeline (screenshot → multimodal LLM → spoken response)
+        │
+        ▼
+  Node.js Backend (Express + SQLite)
+  ├── /api/conversations  — full history with provider/model metadata
+  ├── /api/tool-logs      — per-tool execution records
+  └── /api/analytics      — usage breakdowns, 7-day activity, agent mode stats
+```
+
+---
+
+## Key Design Decisions
+
+**Why a browser extension rather than a native app?**
+Messenger's web client is the only reliable way to intercept and inject messages without violating Meta's API policies. A content script + background service worker combination gives us persistent LLM access without requiring any server-side infrastructure for the core chat loop.
+
+**Why Vercel AI SDK?**
+The `generateText` + `tools` + `maxSteps` API handles the full agentic loop cleanly across every provider. Swapping Claude for GPT-4o or Gemini requires changing one line. This provider-agnostic approach was a deliberate choice — wearable AI shouldn't be locked to a single model.
+
+**Why Claude as the primary addition?**
+Anthropic's models handle ambiguous, context-sparse voice queries better than most alternatives. The glasses capture limited context — a short transcribed sentence, sometimes a photo. Claude's instruction-following and concise output (enforced via the system prompt) makes it particularly well-suited for TTS-bound responses where verbosity is actively harmful.
+
+**Why SQLite for the backend?**
+The analytics backend is intentionally lightweight. The goal is observability, not scale — understanding which tools get invoked, which providers users gravitate toward, and how agent mode changes conversation patterns. SQLite with WAL mode handles this comfortably and ships as a single binary with zero ops overhead.
+
+---
 
 ## Features
 
-1. **Multi-provider AI Chat** — Supports OpenAI, Anthropic Claude (Sonnet 4.5, Opus 4, Haiku 4.5), Perplexity, Google Gemini, DeepSeek, and xAI Grok
-2. **Voice-to-Action Agents** — Say a command and trigger real actions: web search, note-taking, calendar event creation
-3. **Backend Analytics API** — Node.js/Express server with SQLite stores conversation history and tool usage analytics
-4. **Video Monitoring** — Send screenshots of video calls to your chosen AI provider for real-time analysis
+### Multi-Provider LLM Routing
+Supports OpenAI (GPT-4.1, GPT-4o), **Anthropic Claude** (Sonnet 4.5, Opus 4, Haiku 4.5, Claude 3.5 Sonnet/Haiku), Google Gemini (2.5 Flash), Perplexity Sonar, DeepSeek, and xAI Grok — all switchable at runtime from the extension UI.
 
-### Hey Meta send a photo to my food log: [Video Demo](https://www.youtube.com/watch?v=PiEDrcLCmew)
+### Voice-to-Action Agent Mode
+When Agent Mode is enabled, incoming voice messages are routed through an agentic tool loop before a response is generated. The model decides which tools to call based on intent:
 
-![](/assets/video-monitoring.png)
+- **`searchWeb`** — live Perplexity search for factual/current queries
+- **`takeNote`** — persists a voice note to local storage with timestamp
+- **`createCalendarEvent`** — opens Google Calendar pre-filled with parsed event details
 
-## What's New (Enhancements over original)
+The system prompt is tuned to produce responses that read naturally when spoken aloud — no markdown, no bullet points, 1-3 sentences by default.
 
-- **Claude support** with latest models: claude-sonnet-4-5, claude-opus-4-0, claude-haiku-4-5, claude-3-5-sonnet, claude-3-5-haiku
-- **Glasses-optimised system prompt** — responses are concise and TTS-friendly by default
-- **Voice-to-action agentic tools** — `searchWeb`, `takeNote`, `createCalendarEvent`
-- **Backend API** at `localhost:3001` for conversation history, tool logs, and analytics
+### Backend Analytics API
+A standalone Node.js/Express server (`localhost:3001`) logs every conversation and tool execution to SQLite. Useful for understanding usage patterns across a day of wearing the glasses.
 
-### Requirements:
+```
+GET  /api/analytics          # provider breakdown, tool usage, 7-day activity
+GET  /api/conversations      # paginated history with provider/model/agent_mode
+GET  /api/tool-logs          # per-tool execution log
+POST /api/conversations      # logged automatically by background service worker
+POST /api/tool-logs          # logged automatically on each tool invocation
+```
 
-a) [Meta Rayban Smart Glasses](https://about.fb.com/news/2023/09/new-ray-ban-meta-smart-glasses/) (or the standalone messenger app)
+### Vision Pipeline
+Screenshots from video calls are routed to a multimodal model (Claude or GPT-4o) for real-time scene description, returned as a spoken response via the TTS pipeline.
 
-b) [OpenAI/Perplexity/Claude etc Api Key](https://platform.openai.com/)
+---
 
-c) Alternative Facebook/Messenger account
+## Setup
 
-### Browser Extension Setup
+### Requirements
+- [Meta Ray-Ban Smart Glasses](https://about.fb.com/news/2023/09/new-ray-ban-meta-smart-glasses/) or the standalone Messenger app
+- API key for at least one provider (OpenAI, Anthropic, Perplexity, Google, DeepSeek, or xAI)
+- A secondary Facebook/Messenger account to act as the bot
 
-1. bun install
+### Browser Extension
 
-2. bun run dev:chrome (or brave, firefox)
+```bash
+bun install
+bun run dev:chrome   # or dev:brave, dev:firefox
+```
 
-3. This should build and run the extension and automatically open it
+Load the extension, add your API keys in the settings panel, then navigate to [facebook.com/messages/t](https://www.facebook.com/messages/t) on your secondary account.
 
-4. Add any api keys you want to use in the extension: the API settings tab has more information on how to get them
+### Backend API (optional)
 
-5. Sigin into your alt Facebook account and head to [facebook.com/messages/t](https://www.facebook.com/messages/t) and start monitoring the conversation
+```bash
+cd backend
+npm install
+node index.js       # starts on localhost:3001
+```
 
-## Hey Meta Send a Photo/Message to **\_\_\_\_\_**
+---
 
-Before we setup our extension we're going to trick the Meta Glasses into allowing us to send a message to (nearly) any name e.g: "Hey Meta send a message to ChatGPT".
+## Routing Voice Commands to the Extension
 
-### Tricking Meta
+The glasses can only address contacts by name. The trick is to create a Messenger group chat named after the AI you want to invoke:
 
-1. Create a messenger group chat with 2 other facebook accounts (the minimum amount allowed to create a group chat)
+1. Create a group chat with two Facebook accounts
+2. Remove the spare account — you now have a named group chat
+3. Rename it (e.g. "Claude", "Perplexity", "Assistant")
+4. In the Meta View app → Communications → Messenger: disconnect and reconnect to force a contact sync
 
-![](/assets/create-a-chat.png)
+After the sync, "Hey Meta, send a message to Claude" routes directly to your monitored chat.
 
-2. Remove the account you're not going to use
-   ![](/assets/remove-member.png)
+---
 
-3. Change the name of the chat
-   ![](/assets/change-chat-name.png)
+## Examples
 
-4. Update the group chat photo (for a legit feel)
-   ![](/assets/change-photo.png)
-
-5. Set a nickname for your alt bot account
-   ![](/assets/edit-nickname.png)
-
-6. Go to the Meta view app within the communications section
-   ![](/assets/communications.jpeg)
-
-7. Go to Messenger and disconnect then reconnect your messenger account
-   ![](/assets/disconnect.jpeg)
-
-I believe this step resyncs all your latest chats and friends which then allows that Meta Glasses to become aware of your newly created group chat to allow for voice commands!
-
-### Chat Monitoring
-
-1. On your alt account head to messenger.com or facebook.com/messages then open your newly created group chat
-
-2. Start monitoring the chat
-
-3. With each new message/image request it will send it to your chosen provider (ChatGPT, Claude etc) and then respond to you with the output
-
-4. If enabled: It will then generate an audio clip of that output using OpenAI and send it back to you
-
-#### Examples
-
-All chats can be done via voice commands "Hey Meta send a message to \_\_\_" or by simply messaging the group chat.
-
-#### OpenAI query with Minimax text to speech
-
+**Voice query answered by Claude with Minimax TTS**
 ![](/assets/messenger-example-1.png)
 
-#### Using Perplexity to answer a question accurately
-
+**Real-time web search via Perplexity agent tool**
 ![](/assets/messenger-example-2.png)
 
-#### Using GPT 4.1 to describe an image
-
+**Vision pipeline: GPT-4.1 describing a video call frame**
 ![](/assets/messenger-example-3.png)
 
-by [Devon Crebbin](https://github.com/dcrebbin)
+---
 
-Please reach out if there are any issues or feature requests :)
-
-Hopefully the Meta Reality Labs team will provide an SDK in the future so these types of integrations can be ✨productionised✨
-
-Credits:
-
-[Anime Sky from Vecteezy](https://www.vecteezy.com/vector-art/53757812-an-anime-style-illustration-of-clouds-in-the-sky) is used in the icon
+*Built on top of the original [meta-glasses-api](https://github.com/dcrebbin/meta-glasses-api) foundation by Devon Crebbin.*
